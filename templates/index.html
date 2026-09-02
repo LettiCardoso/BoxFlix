@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineFlix</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar__inner">
+      <a class="logo" href="/">Cine<span>Flix</span></a>
+
+      <nav class="nav">
+        <a href="#" class="nav__link nav__link--active">Início</a>
+        <a href="#" class="nav__link">Filmes</a>
+        <a href="#" class="nav__link">Séries</a>
+        <a href="#" class="nav__link">Minha Lista</a>
+      </nav>
+
+      <div class="topbar__actions">
+        <div class="search">
+          <svg viewBox="0 0 24 24" class="icon"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Buscar...">
+        </div>
+        <button class="icon-btn" aria-label="Notificações">
+          <svg viewBox="0 0 24 24" class="icon"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <div class="avatar" aria-label="Perfil"></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO / DESTAQUE -->
+    <section class="hero" id="hero">
+      <div class="hero__bg" id="hero-bg"></div>
+      <div class="hero__scrim"></div>
+
+      <div class="hero__content">
+        <div class="hero__meta">
+          <span class="badge" id="hero-tipo">FILME</span>
+          <span class="hero__tag" id="hero-tag">Destaque da Semana</span>
+        </div>
+
+        <h1 class="hero__title" id="hero-titulo">Carregando…</h1>
+
+        <p class="hero__desc" id="hero-desc"></p>
+
+        <div class="hero__actions">
+          <button class="btn btn--primary">
+            <svg viewBox="0 0 24 24" class="icon icon--sm"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            Assistir
+          </button>
+          <button class="btn btn--ghost">
+            <svg viewBox="0 0 24 24" class="icon icon--sm"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="8"/><line x1="12" y1="12" x2="12" y2="16"/></svg>
+            Mais Informações
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- POPULARES AGORA -->
+    <section class="row">
+      <h2 class="row__title">Populares agora</h2>
+      <div class="grid" id="grid-populares">
+        <!-- cartões de filme injetados via script.js -->
+      </div>
+    </section>
+
+    <!-- SÉRIES EM ALTA -->
+    <section class="row">
+      <h2 class="row__title">Séries em Alta</h2>
+      <div class="grid grid--wide" id="grid-series">
+        <!-- cartões de série injetados via script.js -->
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__inner">
+      <a class="logo logo--sm" href="/">Cine<span>Flix</span></a>
+      <nav class="footer__links">
+        <a href="#">Termos de Uso</a>
+        <a href="#">Privacidade</a>
+        <a href="#">Ajuda</a>
+        <a href="#">Contato</a>
+      </nav>
+      <p class="footer__copy">© 2026 CineFlix. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
