@@ -1,0 +1,145 @@
+/* ===== Base ===== */
+body {
+    background-color: #0d0d0f;
+    color: #ffffff;
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+/* ===== Navbar ===== */
+.boxflix-navbar {
+    background-color: #0d0d0f;
+    border-bottom: 1px solid #1f1f1f;
+}
+
+.boxflix-navbar .nav-link {
+    color: #cfcfcf;
+}
+
+.boxflix-navbar .nav-link:hover,
+.boxflix-navbar .nav-link.active {
+    color: #ffffff;
+}
+
+.boxflix-search {
+    background-color: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    color: #fff;
+    width: 220px;
+}
+
+.avatar-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-color: #2a2a2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* ===== Botões de filtro ===== */
+.btn-filtro {
+    background-color: #1a1a1a;
+    color: #cfcfcf;
+    border: 1px solid #2a2a2a;
+    border-radius: 20px;
+    padding: 4px 16px;
+}
+
+.btn-filtro.active {
+    background-color: #e50914;
+    color: #fff;
+    border-color: #e50914;
+}
+
+/* ===== Card em destaque ===== */
+.card-destaque {
+    position: relative;
+    border-radius: 12px;
+    min-height: 460px;
+    display: flex;
+    align-items: flex-end;
+    padding: 20px;
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+}
+
+.card-destaque::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 10%, rgba(0,0,0,0.1) 60%);
+}
+
+.card-destaque-conteudo {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+}
+
+.badge-novo {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 2;
+    background-color: #e50914;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+}
+
+/* ===== Cards da grade ===== */
+.card-item {
+    position: relative;
+    border-radius: 10px;
+    min-height: 220px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.15s ease;
+    overflow: hidden;
+}
+
+.card-item:hover {
+    transform: translateY(-4px);
+    cursor: pointer;
+}
+
+.card-item::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 15%, rgba(0,0,0,0.05) 55%);
+    z-index: 0;
+}
+
+.card-item-topo, .card-item-rodape {
+    position: relative;
+    z-index: 1;
+}
+
+.card-item-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.tipo-tag {
+    background-color: rgba(255,255,255,0.15);
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* ===== Rodapé ===== */
+.boxflix-footer {
+    background-color: #0d0d0f;
+    border-top: 1px solid #1f1f1f;
+}
