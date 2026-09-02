@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cadastro - BoxFlix</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <header class="topo">
+    <a href="{{ url_for('login_page') }}" class="logo">BoxFlix</a>
+    <a href="{{ url_for('login_page') }}" class="link-topo">Entrar</a>
+  </header>
+
+  <main class="conteudo">
+    <div class="card">
+      <h1>Criar conta</h1>
+      <p class="subtitulo">Junte-se à imersão cinematográfica do BoxFlix.</p>
+
+      <div id="alerta" class="alerta"></div>
+
+      <form id="form-cadastro" novalidate>
+        <div class="campo">
+          <label for="nome">Nome completo</label>
+          <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required />
+          <div class="mensagem-campo" id="erro-nome"></div>
+        </div>
+
+        <div class="campo">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" placeholder="seuemail@exemplo.com" required />
+          <div class="mensagem-campo" id="erro-email"></div>
+        </div>
+
+        <div class="campo">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" name="senha" placeholder="Mínimo de 6 caracteres" required />
+          <div class="mensagem-campo" id="erro-senha"></div>
+        </div>
+
+        <div class="campo">
+          <label for="confirmar-senha">Confirmar senha</label>
+          <input type="password" id="confirmar-senha" name="confirmarSenha" placeholder="Repita a senha" required />
+          <div class="mensagem-campo" id="erro-confirmar-senha"></div>
+        </div>
+
+        <button type="submit" class="btn-principal" id="btn-cadastrar">Começar agora</button>
+      </form>
+
+      <p class="rodape-card">
+        Já tem uma conta? <a href="{{ url_for('login_page') }}">Entre aqui</a>
+      </p>
+    </div>
+  </main>
+
+  <footer class="rodape-site">&copy; 2026 BoxFlix. Projeto acadêmico — todos os direitos reservados.</footer>
+
+  <script src="{{ url_for('static', filename='js/cadastro.js') }}"></script>
+</body>
+</html>

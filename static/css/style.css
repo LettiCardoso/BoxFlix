@@ -1,0 +1,212 @@
+:root {
+  --vermelho: #e50914;
+  --vermelho-escuro: #b0060f;
+  --fundo: #0b0b0d;
+  --card: #161618;
+  --input: #232326;
+  --texto: #f2f2f2;
+  --texto-suave: #a3a3a8;
+  --erro: #ff6b6b;
+  --sucesso: #4cd97b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: var(--texto);
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.9)),
+    radial-gradient(circle at 20% 20%, #1a1a1d, var(--fundo) 60%);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cabeçalho */
+.topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 48px;
+}
+
+.logo {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--vermelho);
+  letter-spacing: 1px;
+  text-decoration: none;
+}
+
+.link-topo {
+  color: var(--texto);
+  text-decoration: none;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 18px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.link-topo:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Conteúdo central */
+.conteudo {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(22, 22, 24, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 40px 36px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.card h1 {
+  margin: 0 0 6px;
+  font-size: 1.8rem;
+}
+
+.card .subtitulo {
+  margin: 0 0 26px;
+  color: var(--texto-suave);
+  font-size: 0.92rem;
+}
+
+.campo {
+  margin-bottom: 16px;
+}
+
+.campo label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+  margin-bottom: 6px;
+}
+
+.campo input {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--input);
+  color: var(--texto);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.campo input:focus {
+  border-color: var(--vermelho);
+}
+
+.campo input.campo-invalido {
+  border-color: var(--erro);
+}
+
+.mensagem-campo {
+  min-height: 16px;
+  font-size: 0.78rem;
+  color: var(--erro);
+  margin-top: 4px;
+}
+
+.btn-principal {
+  width: 100%;
+  padding: 14px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 5px;
+  background: var(--vermelho);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-principal:hover {
+  background: var(--vermelho-escuro);
+}
+
+.btn-principal:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.alerta {
+  display: none;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 5px;
+  font-size: 0.85rem;
+}
+
+.alerta.mostrar {
+  display: block;
+}
+
+.alerta.erro {
+  background: rgba(255, 107, 107, 0.12);
+  color: var(--erro);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.alerta.sucesso {
+  background: rgba(76, 217, 123, 0.12);
+  color: var(--sucesso);
+  border: 1px solid rgba(76, 217, 123, 0.3);
+}
+
+.rodape-card {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--texto-suave);
+}
+
+.rodape-card a {
+  color: var(--texto);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.rodape-card a:hover {
+  color: var(--vermelho);
+}
+
+.rodape-site {
+  padding: 22px 48px;
+  text-align: center;
+  color: var(--texto-suave);
+  font-size: 0.8rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Dashboard simples */
+.dashboard {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.dashboard h1 {
+  color: var(--vermelho);
+}
