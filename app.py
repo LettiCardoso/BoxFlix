@@ -27,6 +27,40 @@ EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 # ---------------------------------------------------------------------------
+# Conteúdo da home (área logada) — "banco de dados" em memória.
+# Troque por uma tabela real (ex.: filmes/series no SQLite) quando quiser.
+# Itens sem "poster" aparecem como espaço reservado no front-end.
+# ---------------------------------------------------------------------------
+DESTAQUE = {
+    "tipo": "FILME",
+    "tag": "Destaque da Semana",
+    "titulo": "A Fronteira do Silêncio",
+    "descricao": (
+        "Em um futuro onde a comunicação falhou, um grupo de exploradores "
+        "precisa cruzar uma zona de distorção temporal para salvar a "
+        "humanidade. Uma jornada épica sobre sacrifício e esperança na "
+        "vastidão silenciosa do cosmos."
+    ),
+    "poster": None,
+}
+
+POPULARES = [
+    {"id": 1, "titulo": "", "poster": None},
+    {"id": 2, "titulo": "", "poster": None},
+    {"id": 3, "titulo": "", "poster": None},
+    {"id": 4, "titulo": "", "poster": None},
+    {"id": 5, "titulo": "", "poster": None},
+]
+
+SERIES_EM_ALTA = [
+    {"id": 1, "titulo": "", "poster": None},
+    {"id": 2, "titulo": "", "poster": None},
+    {"id": 3, "titulo": "", "poster": None},
+    {"id": 4, "titulo": "", "poster": None},
+]
+
+
+# ---------------------------------------------------------------------------
 # Banco de dados
 # ---------------------------------------------------------------------------
 def get_db():
@@ -164,6 +198,17 @@ def api_login():
     session["usuario_nome"] = usuario["nome"]
 
     return jsonify({"sucesso": True, "mensagem": "Login realizado com sucesso!", "redirect": url_for("dashboard")})
+
+
+@app.route("/api/content")
+@login_required
+def api_content():
+    """Devolve o conteúdo da home (destaque, populares, séries em alta)."""
+    return jsonify({
+        "destaque": DESTAQUE,
+        "populares": POPULARES,
+        "series_em_alta": SERIES_EM_ALTA,
+    })
 
 
 if __name__ == "__main__":
