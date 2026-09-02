@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - BoxFlix</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <header class="topo">
+    <a href="{{ url_for('dashboard') }}" class="logo">BoxFlix</a>
+    <a href="{{ url_for('logout') }}" class="link-topo">Sair</a>
+  </header>
+
+  <main class="dashboard">
+    <h1>Bem-vindo, {{ nome }}!</h1>
+    <p>Login realizado com sucesso. Esta é a área protegida do BoxFlix.</p>
+  </main>
+</body>
+</html>

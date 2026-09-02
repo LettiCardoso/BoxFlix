@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - BoxFlix</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <header class="topo">
+    <a href="{{ url_for('login_page') }}" class="logo">BoxFlix</a>
+    <a href="{{ url_for('cadastro_page') }}" class="link-topo">Criar conta</a>
+  </header>
+
+  <main class="conteudo">
+    <div class="card">
+      <h1>Entrar</h1>
+      <p class="subtitulo">Acesse sua conta para continuar assistindo.</p>
+
+      <div id="alerta" class="alerta"></div>
+
+      <form id="form-login" novalidate>
+        <div class="campo">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" placeholder="seuemail@exemplo.com" required />
+          <div class="mensagem-campo" id="erro-email"></div>
+        </div>
+
+        <div class="campo">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" name="senha" placeholder="Sua senha" required />
+          <div class="mensagem-campo" id="erro-senha"></div>
+        </div>
+
+        <button type="submit" class="btn-principal" id="btn-entrar">Entrar</button>
+      </form>
+
+      <p class="rodape-card">
+        Novo por aqui? <a href="{{ url_for('cadastro_page') }}">Cadastre-se</a>
+      </p>
+    </div>
+  </main>
+
+  <footer class="rodape-site">&copy; 2026 BoxFlix. Projeto acadêmico — todos os direitos reservados.</footer>
+
+  <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+</body>
+</html>
