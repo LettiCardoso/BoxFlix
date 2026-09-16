@@ -118,6 +118,21 @@
     </div>
   </footer>
 
+  <!-- Modal de detalhes (filme/série) -->
+  <div class="modal" id="modal-detalhe">
+    <div class="modal__caixa">
+      <button class="modal__fechar" id="modal-fechar" aria-label="Fechar">&times;</button>
+      <div class="modal__poster" id="modal-poster"></div>
+      <div class="modal__conteudo">
+        <span class="badge" id="modal-tipo">FILME</span>
+        <h2 class="modal__titulo" id="modal-titulo"></h2>
+        <p class="modal__meta" id="modal-meta"></p>
+        <p class="modal__descricao" id="modal-descricao"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
   <script src="{{ url_for('static', filename='js/busca.js') }}"></script>
 </body>
 </html>

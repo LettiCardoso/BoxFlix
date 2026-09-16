@@ -33,6 +33,11 @@ function renderizarHero(destaque) {
   if (destaque.poster) {
     bg.style.backgroundImage = `url("${destaque.poster}")`;
   }
+
+  const botaoInfo = document.getElementById("hero-mais-info");
+  if (botaoInfo && destaque.id) {
+    botaoInfo.dataset.filmeId = destaque.id;
+  }
 }
 
 function renderizarGrid(idContainer, itens, tipo) {
@@ -42,6 +47,7 @@ function renderizarGrid(idContainer, itens, tipo) {
   itens.forEach((item) => {
     const card = document.createElement("div");
     card.className = "card";
+    card.dataset.filmeId = item.id;
 
     if (item.poster) {
       card.style.backgroundImage = `url("${item.poster}")`;

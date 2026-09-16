@@ -91,7 +91,8 @@ function renderizaFilmes(filmes) {
 
     const card = document.createElement("div");
     card.className = "busca-card";
-    card.style.backgroundImage = `url("https://picsum.photos/seed/${filme.id}/300/450")`;
+    card.dataset.filmeId = filme.id;
+    card.style.backgroundImage = `url("${filme.poster}")`;
     card.innerHTML = `
       <div class="busca-card__badges">
         ${badge4k}

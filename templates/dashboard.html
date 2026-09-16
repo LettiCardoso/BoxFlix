@@ -56,7 +56,7 @@
             <svg viewBox="0 0 24 24" class="icon icon--sm"><polygon points="6 3 20 12 6 21 6 3"/></svg>
             Assistir
           </button>
-          <button class="btn btn--ghost">
+          <button class="btn btn--ghost" id="hero-mais-info">
             <svg viewBox="0 0 24 24" class="icon icon--sm"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="8"/><line x1="12" y1="12" x2="12" y2="16"/></svg>
             Mais Informações
           </button>
@@ -90,6 +90,21 @@
     </div>
   </footer>
 
+  <!-- Modal de detalhes (filme/série) -->
+  <div class="modal" id="modal-detalhe">
+    <div class="modal__caixa">
+      <button class="modal__fechar" id="modal-fechar" aria-label="Fechar">&times;</button>
+      <div class="modal__poster" id="modal-poster"></div>
+      <div class="modal__conteudo">
+        <span class="badge" id="modal-tipo">FILME</span>
+        <h2 class="modal__titulo" id="modal-titulo"></h2>
+        <p class="modal__meta" id="modal-meta"></p>
+        <p class="modal__descricao" id="modal-descricao"></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
   <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 </body>
 </html>

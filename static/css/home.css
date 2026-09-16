@@ -301,6 +301,60 @@
 }
 .card:hover .card__label{ opacity:1; }
 
+/* ---------- Modal de detalhes (filme/série) ---------- */
+.modal{
+  display:none;
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.75);
+  z-index:100;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.modal--aberto{ display:flex; }
+
+.modal__caixa{
+  position:relative;
+  background:var(--card);
+  border-radius:10px;
+  max-width:720px;
+  width:100%;
+  max-height:90vh;
+  overflow:auto;
+}
+
+.modal__poster{
+  width:100%;
+  aspect-ratio:16/9;
+  background-size:cover;
+  background-position:center;
+  background-color:#1c1c1f;
+  border-radius:10px 10px 0 0;
+}
+
+.modal__conteudo{ padding:22px 28px 30px; }
+.modal__titulo{ margin:12px 0 8px; font-size:1.6rem; }
+.modal__meta{ color:var(--texto-suave); margin:0 0 16px; font-size:.9rem; }
+.modal__descricao{ line-height:1.65; color:var(--texto); margin:0; }
+
+.modal__fechar{
+  position:absolute;
+  top:12px; right:12px;
+  width:34px; height:34px;
+  border-radius:50%;
+  border:none;
+  background:rgba(0,0,0,.6);
+  color:#fff;
+  font-size:1.3rem;
+  cursor:pointer;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:2;
+}
+.modal__fechar:hover{ background:rgba(0,0,0,.85); }
+
 /* ---------- Footer da home ---------- */
 .home-footer{
   margin-top: 60px;
