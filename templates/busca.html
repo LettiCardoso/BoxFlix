@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Busca Avançada - BoxFlix</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/busca.css') }}" />
+</head>
+<body class="home-body">
+
+  <header class="home-topbar">
+    <div class="home-topbar__inner">
+      <a class="logo" href="{{ url_for('dashboard') }}">BoxFlix</a>
+
+      <nav class="home-nav">
+        <a href="{{ url_for('dashboard') }}" class="home-nav__link">Início</a>
+        <a href="{{ url_for('busca_avancada') }}" class="home-nav__link home-nav__link--active">Filmes</a>
+        <a href="{{ url_for('busca_avancada') }}" class="home-nav__link">Séries</a>
+        <a href="#" class="home-nav__link">Minha Lista</a>
+      </nav>
+
+      <div class="home-topbar__actions">
+        <form class="home-search" action="{{ url_for('busca_avancada') }}" method="get">
+          <svg viewBox="0 0 24 24" class="icon"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" name="q" id="campoBusca" placeholder="Buscar filmes, séries..." value="{{ termo_inicial }}">
+        </form>
+        <button class="home-icon-btn" aria-label="Notificações">
+          <svg viewBox="0 0 24 24" class="icon"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <div class="home-user">
+          <div class="home-avatar" title="{{ nome }}">{{ nome[0]|upper if nome else '?' }}</div>
+          <a href="{{ url_for('logout') }}" class="home-sair">Sair</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="busca-main">
+    <div class="busca-layout">
+
+      <!-- Filtros -->
+      <aside class="busca-filtros">
+        <h2 class="busca-filtros__titulo">Filtros Avançados</h2>
+
+        <label class="busca-label">Ano de Lançamento</label>
+        <div class="busca-range-valores">
+          <span id="anoMinLabel">1980</span>
+          <span id="anoMaxLabel">2026</span>
+        </div>
+        <input type="range" class="busca-range" id="anoMin" min="1980" max="2026" value="1980">
+        <input type="range" class="busca-range busca-espaco" id="anoMax" min="1980" max="2026" value="2026">
+
+        <label class="busca-label">Classificação Indicativa</label>
+        <div class="busca-chips busca-espaco" id="grupoClassificacao">
+          <button type="button" class="busca-chip" data-valor="L">L</button>
+          <button type="button" class="busca-chip" data-valor="10">10</button>
+          <button type="button" class="busca-chip" data-valor="12">12</button>
+          <button type="button" class="busca-chip" data-valor="14">14</button>
+          <button type="button" class="busca-chip" data-valor="16">16</button>
+          <button type="button" class="busca-chip" data-valor="18">18</button>
+        </div>
+
+        <label class="busca-label busca-label--linha">
+          <span>Nota Mínima</span>
+          <span id="notaLabel">0</span>
+        </label>
+        <input type="range" class="busca-range busca-espaco" id="notaMin" min="0" max="10" step="0.1" value="0">
+
+        <label class="busca-label">Qualidade de Vídeo</label>
+        <div class="busca-espaco">
+          <label class="busca-checkbox">
+            <input type="checkbox" value="4K HDR" id="qualidade4k" checked>
+            4K HDR
+          </label>
+          <label class="busca-checkbox">
+            <input type="checkbox" value="HD 1080p" id="qualidadeHd" checked>
+            HD 1080p
+          </label>
+        </div>
+
+        <div class="busca-filtros__acoes">
+          <button class="btn btn--primary busca-btn-full" id="btnAplicar">Aplicar</button>
+          <button class="btn btn--ghost busca-btn-full" id="btnLimpar">Limpar</button>
+        </div>
+      </aside>
+
+      <!-- Resultados -->
+      <section class="busca-resultados">
+        <div class="busca-resultados__topo">
+          <div>
+            <h1 class="busca-titulo">Resultados da Busca</h1>
+            <span class="busca-subtitulo" id="contadorResultados">Carregando…</span>
+          </div>
+        </div>
+
+        <div id="gradeFilmes" class="grid busca-grid"></div>
+
+        <div id="semResultados" class="busca-vazio" style="display:none;">
+          <p>Nenhum filme encontrado com esses filtros.</p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="home-footer">
+    <div class="home-footer__inner">
+      <a class="logo" href="{{ url_for('dashboard') }}">BoxFlix</a>
+      <nav class="home-footer__links">
+        <a href="#">Termos de Uso</a>
+        <a href="#">Privacidade</a>
+        <a href="#">Ajuda</a>
+        <a href="#">Contato</a>
+      </nav>
+      <p class="home-footer__copy">&copy; 2026 BoxFlix. Projeto acadêmico — todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/busca.js') }}"></script>
+</body>
+</html>

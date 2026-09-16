@@ -59,6 +59,66 @@ SERIES_EM_ALTA = [
     {"id": 4, "titulo": "", "poster": None},
 ]
 
+# ---------------------------------------------------------------------------
+# Catálogo usado pela Busca Avançada — "banco de dados" em memória.
+# Troque por uma tabela real (ex.: filmes/series no SQLite) quando quiser.
+# ---------------------------------------------------------------------------
+CATALOGO = [
+    {
+        "id": 1, "titulo": "Solitude: Red Planet", "genero": "Ficção Científica",
+        "ano": 2024, "nota": 9.2, "classificacao": 14, "qualidade": ["4K HDR", "HD 1080p"],
+    },
+    {
+        "id": 2, "titulo": "Cidade Submersa", "genero": "Drama",
+        "ano": 2023, "nota": 8.1, "classificacao": 12, "qualidade": ["HD 1080p"],
+    },
+    {
+        "id": 3, "titulo": "Eldrin", "genero": "Fantasia",
+        "ano": 2022, "nota": 8.7, "classificacao": 16, "qualidade": ["4K HDR"],
+    },
+    {
+        "id": 4, "titulo": "Noite de Fúria", "genero": "Ação",
+        "ano": 2024, "nota": 7.9, "classificacao": 18, "qualidade": ["4K HDR", "HD 1080p"],
+    },
+    {
+        "id": 5, "titulo": "The Whispering Oaks", "genero": "Terror",
+        "ano": 2021, "nota": 7.2, "classificacao": 16, "qualidade": ["HD 1080p"],
+    },
+    {
+        "id": 6, "titulo": "A Jornada das Estrelas", "genero": "Aventura",
+        "ano": 2020, "nota": 8.4, "classificacao": 10, "qualidade": ["4K HDR"],
+    },
+    {
+        "id": 7, "titulo": "Sombras do Amanhã", "genero": "Suspense",
+        "ano": 2019, "nota": 7.5, "classificacao": 14, "qualidade": ["HD 1080p"],
+    },
+    {
+        "id": 8, "titulo": "Vento Sul", "genero": "Drama",
+        "ano": 2018, "nota": 8.9, "classificacao": "L", "qualidade": ["4K HDR", "HD 1080p"],
+    },
+    {
+        "id": 9, "titulo": "A Fronteira do Silêncio", "genero": "Ficção Científica",
+        "ano": 2026, "nota": 8.8, "classificacao": 12, "qualidade": ["4K HDR", "HD 1080p"],
+    },
+]
+
+
+def filtra_catalogo(termo, ano_min, ano_max, classificacoes, nota_min, qualidades):
+    resultado = []
+    for item in CATALOGO:
+        if termo and termo.lower() not in item["titulo"].lower():
+            continue
+        if not (ano_min <= item["ano"] <= ano_max):
+            continue
+        if classificacoes and str(item["classificacao"]) not in classificacoes:
+            continue
+        if item["nota"] < nota_min:
+            continue
+        if qualidades and not any(q in item["qualidade"] for q in qualidades):
+            continue
+        resultado.append(item)
+    return resultado
+
 
 # ---------------------------------------------------------------------------
 # Banco de dados
@@ -149,6 +209,16 @@ def logout():
     return redirect(url_for("login_page"))
 
 
+@app.route("/busca-avancada")
+@login_required
+def busca_avancada():
+    return render_template(
+        "busca.html",
+        nome=session.get("usuario_nome"),
+        termo_inicial=request.args.get("q", ""),
+    )
+
+
 # ---------------------------------------------------------------------------
 # API (chamada pelo JavaScript via fetch)
 # ---------------------------------------------------------------------------
@@ -209,6 +279,21 @@ def api_content():
         "populares": POPULARES,
         "series_em_alta": SERIES_EM_ALTA,
     })
+
+
+@app.route("/api/buscar")
+@login_required
+def api_buscar():
+    """Busca avançada: filtra o catálogo por título, ano, classificação, nota e qualidade."""
+    termo = request.args.get("q", "").strip()
+    ano_min = request.args.get("ano_min", 1980, type=int)
+    ano_max = request.args.get("ano_max", 2026, type=int)
+    nota_min = request.args.get("nota_min", 0, type=float)
+    classificacoes = request.args.getlist("classificacao")
+    qualidades = request.args.getlist("qualidade")
+
+    resultado = filtra_catalogo(termo, ano_min, ano_max, classificacoes, nota_min, qualidades)
+    return jsonify({"total": len(resultado), "filmes": resultado})
 
 
 if __name__ == "__main__":

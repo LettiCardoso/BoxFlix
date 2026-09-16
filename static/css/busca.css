@@ -1,0 +1,221 @@
+/* ---------------------------------------------------------------
+   Busca Avançada — reaproveita as variáveis de style.css e o
+   layout de topbar/rodapé de home.css. Sem Bootstrap: segue o
+   mesmo sistema de design (CSS puro) do resto do BoxFlix.
+------------------------------------------------------------------ */
+
+.busca-main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px;
+  width: 100%;
+}
+
+.busca-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+/* ---------- Painel de filtros ---------- */
+.busca-filtros {
+  background: var(--card);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 24px;
+  position: sticky;
+  top: 90px;
+}
+
+.busca-filtros__titulo {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 20px;
+}
+
+.busca-label {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+  margin-bottom: 8px;
+}
+
+.busca-label--linha {
+  display: flex;
+  justify-content: space-between;
+}
+
+.busca-espaco {
+  margin-bottom: 22px;
+}
+
+.busca-range-valores {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--texto-suave);
+  margin-bottom: 4px;
+}
+
+.busca-range {
+  width: 100%;
+  accent-color: var(--vermelho);
+  display: block;
+}
+.busca-range + .busca-range {
+  margin-top: 6px;
+}
+
+.busca-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.busca-chip {
+  background: var(--input);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--texto-suave);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.busca-chip:hover {
+  border-color: var(--vermelho);
+  color: var(--texto);
+}
+.busca-chip.busca-chip--ativo {
+  background: var(--vermelho);
+  border-color: var(--vermelho);
+  color: #fff;
+}
+
+.busca-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--texto-suave);
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+.busca-checkbox input {
+  accent-color: var(--vermelho);
+  width: 15px;
+  height: 15px;
+}
+
+.busca-filtros__acoes {
+  display: flex;
+  gap: 10px;
+}
+.busca-btn-full {
+  flex: 1;
+  padding: 11px;
+  font-size: 0.9rem;
+}
+
+/* ---------- Resultados ---------- */
+.busca-resultados__topo {
+  margin-bottom: 20px;
+}
+
+.busca-titulo {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.busca-subtitulo {
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+}
+
+.busca-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.busca-card {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+.busca-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--vermelho);
+}
+
+.busca-card__badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.busca-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 4px;
+}
+.busca-badge--4k {
+  background: var(--vermelho);
+  color: #fff;
+}
+.busca-badge--nota {
+  background: rgba(0, 0, 0, 0.65);
+  color: #ffd54a;
+}
+
+.busca-card__info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 10px 12px 12px;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.9), transparent 70%);
+}
+
+.busca-card__titulo {
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.busca-card__meta {
+  font-size: 0.75rem;
+  color: var(--texto-suave);
+}
+
+.busca-vazio {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--texto-suave);
+}
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 900px) {
+  .busca-layout {
+    grid-template-columns: 1fr;
+  }
+  .busca-filtros {
+    position: static;
+  }
+  .busca-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
