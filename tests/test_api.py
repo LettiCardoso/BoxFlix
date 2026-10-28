@@ -1,220 +1,229 @@
-"""Testes automatizados das APIs do BoxFlix (cenários 200/201, 400 e 500).
+"""Testes da API BoxFlix (cenários 200, 400, 500 e complementares).
 
-Execução:  pytest -v
-Cada teste usa um banco SQLite temporário, sem tocar no boxflix.db real.
+Executar na raiz do projeto:  python -m pytest tests -v
 """
+import os
 import sqlite3
+import sys
+from unittest import mock
 
 import pytest
 
-import app as boxflix
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import app as boxflix  # noqa: E402
 
-USUARIO = {
-    "nome": "Maria Silva",
-    "email": "maria@email.com",
-    "senha": "123456",
-    "confirmarSenha": "123456",
-}
-MSG_ERRO_500 = "Erro interno do servidor. Tente novamente mais tarde."
+CADASTRO = {"nome": "Maria Silva", "email": "Maria@Teste.com",
+            "senha": "senha123", "confirmarSenha": "senha123"}
+TERMOS_PROIBIDOS = ["Traceback", "sqlite3", "unable to open database", "falha interna simulada", "app.py", "SELECT "]
 
 
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(boxflix, "DATABASE", str(tmp_path / "teste.db"))
     boxflix.init_db()
-    boxflix.app.config["TESTING"] = True
-    with boxflix.app.test_client() as c:
-        yield c
+    boxflix.app.config.update(TESTING=False, PROPAGATE_EXCEPTIONS=False)
+    return boxflix.app.test_client()
 
 
 @pytest.fixture
 def logado(client):
-    client.post("/api/cadastro", json=USUARIO)
-    client.post("/api/login", json={"email": USUARIO["email"], "senha": USUARIO["senha"]})
+    client.post("/api/cadastro", json=CADASTRO)
+    r = client.post("/api/login", json={"email": "maria@teste.com", "senha": "senha123"})
+    assert r.status_code == 200
     return client
 
 
-def quebrar_banco(monkeypatch):
-    """Simula falha interna controlada: o banco levanta erro com detalhe sensível."""
-    def falha():
-        raise sqlite3.OperationalError("unable to open database file /var/secret/boxflix.db")
-    monkeypatch.setattr(boxflix, "get_db", falha)
+def titulos(r):
+    return [i["titulo"] for i in r.get_json()["filmes"]]
 
 
-def assert_500_sem_detalhes(resp):
-    assert resp.status_code == 500
-    corpo = resp.get_data(as_text=True)
-    assert resp.get_json() == {"sucesso": False, "mensagem": MSG_ERRO_500}
-    for vazado in ("Traceback", "sqlite3", "OperationalError", "secret", "app.py"):
-        assert vazado not in corpo
-
-
-# ------------------------------ POST /api/cadastro ------------------------------
-def test_cadastro_200_sucesso(client):
-    r = client.post("/api/cadastro", json=USUARIO)
-    assert r.status_code == 200
+# ------------------------------- 200 / 201 ---------------------------------
+def test_ct01_cadastro_valido(client):
+    r = client.post("/api/cadastro", json=CADASTRO)
+    assert r.status_code == 201
     assert r.get_json() == {"sucesso": True, "mensagem": "Conta criada com sucesso! Faça login."}
+    with sqlite3.connect(boxflix.DATABASE) as db:
+        email, hash_ = db.execute("SELECT email, senha_hash FROM usuarios").fetchone()
+    assert email == "maria@teste.com" and hash_ != "senha123"
 
 
-@pytest.mark.parametrize("campo,valor,mensagem", [
-    ("nome", "Ma", "Informe seu nome completo."),
-    ("nome", "", "Informe seu nome completo."),
-    ("email", "email-invalido", "Informe um e-mail válido."),
-    ("senha", "123", "A senha deve ter pelo menos 6 caracteres."),
-    ("confirmarSenha", "999999", "As senhas não coincidem."),
-])
-def test_cadastro_400_dados_invalidos(client, campo, valor, mensagem):
-    r = client.post("/api/cadastro", json={**USUARIO, campo: valor})
-    assert r.status_code == 400
-    assert r.get_json() == {"sucesso": False, "mensagem": mensagem}
-
-
-def test_cadastro_400_campo_omitido(client):
-    dados = {k: v for k, v in USUARIO.items() if k != "email"}
-    r = client.post("/api/cadastro", json=dados)
-    assert r.status_code == 400
-    assert r.get_json()["mensagem"] == "Informe um e-mail válido."
-
-
-def test_cadastro_400_corpo_vazio(client):
-    r = client.post("/api/cadastro")
-    assert r.status_code == 400
-    assert r.get_json()["sucesso"] is False
-
-
-def test_cadastro_409_email_duplicado(client):
-    client.post("/api/cadastro", json=USUARIO)
-    r = client.post("/api/cadastro", json=USUARIO)
-    assert r.status_code == 409
-    assert r.get_json() == {"sucesso": False, "mensagem": "Este e-mail já está cadastrado."}
-
-
-def test_cadastro_500_falha_no_banco(client, monkeypatch):
-    quebrar_banco(monkeypatch)
-    assert_500_sem_detalhes(client.post("/api/cadastro", json=USUARIO))
-
-
-# -------------------------------- POST /api/login --------------------------------
-def test_login_200_sucesso(client):
-    client.post("/api/cadastro", json=USUARIO)
-    r = client.post("/api/login", json={"email": USUARIO["email"], "senha": USUARIO["senha"]})
+def test_ct02_login_valido(client):
+    client.post("/api/cadastro", json=CADASTRO)
+    r = client.post("/api/login", json={"email": " MARIA@teste.com ", "senha": "senha123"})
     assert r.status_code == 200
     assert r.get_json() == {"sucesso": True, "mensagem": "Login realizado com sucesso!", "redirect": "/dashboard"}
+    assert "session=" in r.headers["Set-Cookie"]
+    assert client.get("/dashboard").status_code == 200
 
 
-@pytest.mark.parametrize("dados", [{"senha": "123456"}, {"email": "maria@email.com"}, {}])
-def test_login_400_campo_omitido(client, dados):
-    r = client.post("/api/login", json=dados)
+def test_ct03_content(logado):
+    r = logado.get("/api/content")
+    j = r.get_json()
+    assert r.status_code == 200 and set(j) == {"destaque", "populares", "series_em_alta"}
+    assert j["destaque"]["id"] == 2
+    assert [i["id"] for i in j["populares"]] == [1, 2, 3, 4, 5]
+    assert [i["id"] for i in j["series_em_alta"]] == [6, 7, 8, 9]
+
+
+def test_ct04_titulo(logado):
+    r = logado.get("/api/titulo/1")
+    j = r.get_json()
+    assert r.status_code == 200
+    assert set(j) == {"id", "titulo", "tipo", "genero", "ano", "nota", "classificacao", "qualidade", "poster", "descricao"}
+    assert (j["titulo"], j["tipo"], j["ano"], j["nota"]) == ("Homem-Aranha 2", "filme", 2004, 8.9)
+
+
+def test_ct05_buscar_sem_filtros(logado):
+    j = logado.get("/api/buscar").get_json()
+    assert j["total"] == 9 == len(j["filmes"])
+
+
+def test_ct06_buscar_titulo(logado):
+    r = logado.get("/api/buscar?q=homem")
+    assert r.status_code == 200 and r.get_json()["total"] == 2
+    assert set(titulos(r)) == {"Homem-Aranha 2", "Homem de Ferro"}
+
+
+def test_ct07_buscar_classificacao_e_nota(logado):
+    assert titulos(logado.get("/api/buscar?classificacao=L&nota_min=8")) == ["Divertida Mente 2"]
+
+
+def test_ct08_buscar_qualidade_e_periodo(logado):
+    r = logado.get("/api/buscar", query_string={"qualidade": "4K HDR", "ano_min": 2010, "ano_max": 2024})
+    assert set(titulos(r)) == {"Vingadores: Guerra Infinita", "Divertida Mente 2", "Barbie"}
+
+
+def test_ct09_buscar_sem_resultado(logado):
+    r = logado.get("/api/buscar?q=zzzz")
+    assert r.status_code == 200 and r.get_json() == {"total": 0, "filmes": []}
+
+
+# ---------------------------------- 400 ------------------------------------
+@pytest.mark.parametrize("campos,mensagem", [
+    ({"nome": ""}, "Informe seu nome completo."),
+    ({"nome": "Jo"}, "Informe seu nome completo."),
+    ({"email": "maria.teste.com"}, "Informe um e-mail válido."),
+    ({"senha": "123", "confirmarSenha": "123"}, "A senha deve ter pelo menos 6 caracteres."),
+    ({"confirmarSenha": "outra123"}, "As senhas não coincidem."),
+    ({"__vazio__": True}, "Informe seu nome completo."),
+])
+def test_ct10_a_15_cadastro_invalido(client, campos, mensagem):
+    corpo = {} if "__vazio__" in campos else {**CADASTRO, **campos}
+    r = client.post("/api/cadastro", json=corpo)
+    assert r.status_code == 400
+    assert r.get_json() == {"sucesso": False, "mensagem": mensagem}
+    with sqlite3.connect(boxflix.DATABASE) as db:
+        assert db.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0] == 0
+
+
+@pytest.mark.parametrize("tipo", ["application/json", "text/plain"])
+def test_ct16_cadastro_corpo_nao_json(client, tipo):
+    r = client.post("/api/cadastro", data="{nome:", content_type=tipo)
+    assert r.status_code == 400
+    assert r.get_json() == {"sucesso": False, "mensagem": boxflix.MSG_CORPO_INVALIDO}
+
+
+def test_ct17_login_sem_senha(client):
+    r = client.post("/api/login", json={"email": "maria@teste.com"})
+    assert r.status_code == 400
+    assert r.get_json() == {"sucesso": False, "mensagem": "Preencha e-mail e senha."}
+    assert "Set-Cookie" not in r.headers
+
+
+def test_ct18_login_corpo_vazio(client):
+    r = client.post("/api/login", json={})
     assert r.status_code == 400
     assert r.get_json() == {"sucesso": False, "mensagem": "Preencha e-mail e senha."}
 
 
-def test_login_401_senha_incorreta(client):
-    client.post("/api/cadastro", json=USUARIO)
-    r = client.post("/api/login", json={"email": USUARIO["email"], "senha": "errada!"})
+# ---------------------------------- 500 ------------------------------------
+def confere_500(r):
+    assert r.status_code == 500
+    assert r.get_json() == {"sucesso": False, "mensagem": "Erro interno. Tente novamente mais tarde."}
+    corpo = r.get_data(as_text=True)
+    for termo in TERMOS_PROIBIDOS:
+        assert termo not in corpo
+
+
+def falha_db():
+    return mock.patch.object(boxflix, "get_db", side_effect=sqlite3.OperationalError("unable to open database file"))
+
+
+def test_ct19_500_login(client):
+    with falha_db():
+        r = client.post("/api/login", json={"email": "maria@teste.com", "senha": "senha123"})
+    confere_500(r)
+    assert "Set-Cookie" not in r.headers
+
+
+def test_ct20_500_cadastro(client):
+    with falha_db():
+        r = client.post("/api/cadastro", json=CADASTRO)
+    confere_500(r)
+    with sqlite3.connect(boxflix.DATABASE) as db:
+        assert db.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0] == 0
+
+
+def test_ct21_500_buscar(logado):
+    with mock.patch.object(boxflix, "filtra_catalogo", side_effect=RuntimeError("falha interna simulada")):
+        confere_500(logado.get("/api/buscar?q=x"))
+
+
+def test_ct22_500_titulo(logado):
+    with mock.patch.object(boxflix, "busca_por_id", side_effect=RuntimeError("falha interna simulada")):
+        confere_500(logado.get("/api/titulo/1"))
+
+
+# ------------------------------ complementares -----------------------------
+@pytest.mark.parametrize("corpo", [
+    {"email": "maria@teste.com", "senha": "errada1"},
+    {"email": "x@y.com", "senha": "abcdef"},
+])
+def test_ct23_login_invalido(client, corpo):
+    client.post("/api/cadastro", json=CADASTRO)
+    r = client.post("/api/login", json=corpo)
     assert r.status_code == 401
     assert r.get_json() == {"sucesso": False, "mensagem": "E-mail ou senha inválidos."}
 
 
-def test_login_401_usuario_inexistente(client):
-    r = client.post("/api/login", json={"email": "naoexiste@email.com", "senha": "123456"})
+def test_ct24_email_duplicado(client):
+    client.post("/api/cadastro", json=CADASTRO)
+    r = client.post("/api/cadastro", json=CADASTRO)
+    assert r.status_code == 409
+    assert r.get_json() == {"sucesso": False, "mensagem": "Este e-mail já está cadastrado."}
+
+
+def test_ct25_titulo_inexistente(logado):
+    r = logado.get("/api/titulo/999")
+    assert r.status_code == 404 and r.get_json() == {"sucesso": False, "mensagem": "Não encontrado."}
+    r = logado.get("/api/titulo/abc")
+    assert r.status_code == 404 and r.get_json()["sucesso"] is False
+
+
+@pytest.mark.parametrize("rota", ["/api/content", "/api/titulo/1", "/api/buscar"])
+def test_ct26_api_sem_sessao_401(client, rota):
+    r = client.get(rota)
     assert r.status_code == 401
-    assert r.get_json()["mensagem"] == "E-mail ou senha inválidos."
+    assert r.get_json()["sucesso"] is False
 
 
-def test_login_500_falha_no_banco(client, monkeypatch):
-    quebrar_banco(monkeypatch)
-    assert_500_sem_detalhes(client.post("/api/login", json={"email": "a@a.com", "senha": "123456"}))
-
-
-# -------------------------------- GET /api/content --------------------------------
-def test_content_200_sucesso(logado):
-    r = logado.get("/api/content")
-    assert r.status_code == 200
-    d = r.get_json()
-    assert d["destaque"]["titulo"] == "Vingadores: Guerra Infinita"
-    assert len(d["populares"]) == 5 and all(i["id"] for i in d["populares"])
-    assert [s["titulo"] for s in d["series_em_alta"]] == ["Teen Wolf", "Diários de Vampiros", "Naruto", "Barbie"]
-
-
-def test_content_sem_login_redireciona(client):
-    r = client.get("/api/content")
+@pytest.mark.parametrize("rota", ["/dashboard", "/busca-avancada"])
+def test_ct26_paginas_sem_sessao_redirecionam(client, rota):
+    r = client.get(rota)
     assert r.status_code == 302 and r.headers["Location"] == "/"
 
 
-def test_content_500_falha_interna(logado, monkeypatch):
-    # Dado corrompido (não serializável em JSON) provoca falha interna ao montar a resposta
-    monkeypatch.setattr(boxflix, "POPULARES", {object()})
-    assert_500_sem_detalhes(logado.get("/api/content"))
+def test_metodo_nao_permitido_em_api(client):
+    r = client.get("/api/cadastro")
+    assert r.status_code == 405 and r.get_json()["sucesso"] is False
 
 
-# ------------------------------ GET /api/titulo/<id> ------------------------------
-def test_titulo_200_sucesso(logado):
-    r = logado.get("/api/titulo/5")
-    assert r.status_code == 200
-    d = r.get_json()
-    assert (d["id"], d["titulo"], d["tipo"], d["ano"], d["nota"]) == (5, "Homem de Ferro", "filme", 2008, 9.1)
+@pytest.mark.parametrize("qs", ["ano_min=abc", "ano_max=x", "nota_min=abc", "nota_min=nan", "nota_min=-5", "nota_min=11"])
+def test_ct27_buscar_parametro_invalido(logado, qs):
+    r = logado.get(f"/api/buscar?{qs}")
+    assert r.status_code == 400 and r.get_json()["sucesso"] is False
 
 
-def test_titulo_404_inexistente(logado):
-    r = logado.get("/api/titulo/999")
-    assert r.status_code == 404
-    assert r.get_json() == {"mensagem": "Não encontrado."}
-
-
-def test_titulo_id_nao_numerico_404(logado):
-    assert logado.get("/api/titulo/abc").status_code == 404
-
-
-def test_titulo_500_falha_interna(logado, monkeypatch):
-    def falha(_):
-        raise RuntimeError("falha simulada /home/app/segredo.py")
-    monkeypatch.setattr(boxflix, "busca_por_id", falha)
-    assert_500_sem_detalhes(logado.get("/api/titulo/1"))
-
-
-# ------------------------------- GET /api/buscar -------------------------------
-def test_buscar_200_sem_filtros_retorna_catalogo(logado):
-    d = logado.get("/api/buscar").get_json()
-    assert d["total"] == 9 and len(d["filmes"]) == 9
-
-
-def test_buscar_200_por_titulo(logado):
-    r = logado.get("/api/buscar?q=homem")
-    assert r.status_code == 200
-    d = r.get_json()
-    assert d["total"] == 2
-    assert {f["titulo"] for f in d["filmes"]} == {"Homem-Aranha 2", "Homem de Ferro"}
-
-
-def test_buscar_200_filtros_combinados(logado):
-    d = logado.get("/api/buscar?nota_min=9&ano_min=2010").get_json()
-    assert d["total"] == 1 and d["filmes"][0]["titulo"] == "Vingadores: Guerra Infinita"
-
-
-def test_buscar_200_por_classificacao(logado):
-    d = logado.get("/api/buscar?classificacao=L").get_json()
-    assert sorted(f["id"] for f in d["filmes"]) == [3, 4, 9]
-
-
-def test_buscar_200_sem_resultados(logado):
-    r = logado.get("/api/buscar?q=zzzinexistente")
-    assert r.status_code == 200
-    assert r.get_json() == {"total": 0, "filmes": []}
-
-
-def test_buscar_parametro_invalido_usa_padrao(logado):
-    """Comportamento atual: ano_min não numérico é ignorado (não gera 400)."""
-    r = logado.get("/api/buscar?ano_min=abc")
-    assert r.status_code == 200 and r.get_json()["total"] == 9
-
-
-def test_buscar_sem_login_redireciona(client):
-    assert client.get("/api/buscar").status_code == 302
-
-
-def test_buscar_500_falha_interna(logado, monkeypatch):
-    def falha(*a, **k):
-        raise RuntimeError("falha simulada /home/app/segredo.py")
-    monkeypatch.setattr(boxflix, "filtra_catalogo", falha)
-    assert_500_sem_detalhes(logado.get("/api/buscar?q=x"))
+def test_buscar_intervalo_invertido_e_200_vazio(logado):
+    r = logado.get("/api/buscar?ano_min=2030&ano_max=2020")
+    assert r.status_code == 200 and r.get_json() == {"total": 0, "filmes": []}

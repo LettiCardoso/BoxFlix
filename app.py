@@ -12,17 +12,17 @@ Rotas principais:
   POST      /api/cadastro  -> cadastro via JS (fetch), retorna JSON
 """
 
-import logging
+import math
+import os
 import re
 import sqlite3
 from functools import wraps
 
 from flask import Flask, g, jsonify, redirect, render_template, request, session, url_for
-from werkzeug.exceptions import HTTPException
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "troque-esta-chave-em-producao"  # necessário para usar session
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "troque-esta-chave-em-producao")  # necessário para usar session
 DATABASE = "boxflix.db"
 
 EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -236,6 +236,8 @@ def login_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
         if "usuario_id" not in session:
+            if request.path.startswith("/api/"):
+                return jsonify({"sucesso": False, "mensagem": "Sessão expirada ou usuário não autenticado."}), 401
             return redirect(url_for("login_page"))
         return view(*args, **kwargs)
 
@@ -254,22 +256,36 @@ def validar_cadastro(nome, email, senha, confirmar_senha):
     return None
 
 
-# ---------------------------------------------------------------------------
-# Tratamento de erros
-# ---------------------------------------------------------------------------
-@app.errorhandler(Exception)
-def erro_interno(erro):
-    """Erros inesperados: registra o detalhe no log e devolve mensagem genérica.
+def corpo_json():
+    """Devolve o corpo JSON (dict) ou None se estiver ausente/malformado/não for objeto."""
+    dados = request.get_json(silent=True)
+    return dados if isinstance(dados, dict) else None
 
-    Nunca expõe stack trace, caminho de arquivo ou mensagem do banco ao cliente.
-    Erros HTTP normais (404, 405...) seguem o comportamento padrão do Flask.
-    """
-    if isinstance(erro, HTTPException):
-        return erro
-    app.logger.error("Erro interno em %s %s", request.method, request.path, exc_info=erro)
+
+MSG_CORPO_INVALIDO = "Corpo da requisição inválido. Envie um JSON válido."
+
+
+# ---------------------------------------------------------------------------
+# Tratamento de erros (nunca expõe detalhes técnicos ao cliente)
+# ---------------------------------------------------------------------------
+@app.errorhandler(404)
+def erro_404(erro):
     if request.path.startswith("/api/"):
-        return jsonify({"sucesso": False, "mensagem": "Erro interno do servidor. Tente novamente mais tarde."}), 500
-    return "Erro interno do servidor.", 500
+        return jsonify({"sucesso": False, "mensagem": "Não encontrado."}), 404
+    return erro
+
+
+@app.errorhandler(405)
+def erro_405(erro):
+    if request.path.startswith("/api/"):
+        return jsonify({"sucesso": False, "mensagem": "Método não permitido."}), 405
+    return erro
+
+
+@app.errorhandler(500)
+def erro_500(erro):
+    # O detalhe da exceção já fica no log do servidor; o cliente recebe só a mensagem genérica.
+    return jsonify({"sucesso": False, "mensagem": "Erro interno. Tente novamente mais tarde."}), 500
 
 
 # ---------------------------------------------------------------------------
@@ -316,7 +332,9 @@ def busca_avancada():
 # ---------------------------------------------------------------------------
 @app.route("/api/cadastro", methods=["POST"])
 def api_cadastro():
-    dados = request.get_json(silent=True) or {}
+    dados = corpo_json()
+    if dados is None:
+        return jsonify({"sucesso": False, "mensagem": MSG_CORPO_INVALIDO}), 400
     nome = (dados.get("nome") or "").strip()
     email = (dados.get("email") or "").strip().lower()
     senha = dados.get("senha") or ""
@@ -338,12 +356,14 @@ def api_cadastro():
     )
     db.commit()
 
-    return jsonify({"sucesso": True, "mensagem": "Conta criada com sucesso! Faça login."})
+    return jsonify({"sucesso": True, "mensagem": "Conta criada com sucesso! Faça login."}), 201
 
 
 @app.route("/api/login", methods=["POST"])
 def api_login():
-    dados = request.get_json(silent=True) or {}
+    dados = corpo_json()
+    if dados is None:
+        return jsonify({"sucesso": False, "mensagem": MSG_CORPO_INVALIDO}), 400
     email = (dados.get("email") or "").strip().lower()
     senha = dados.get("senha") or ""
 
@@ -379,7 +399,7 @@ def api_titulo(item_id):
     """Devolve os detalhes completos de um filme/série (usado pelo modal)."""
     item = busca_por_id(item_id)
     if item is None:
-        return jsonify({"mensagem": "Não encontrado."}), 404
+        return jsonify({"sucesso": False, "mensagem": "Não encontrado."}), 404
     return jsonify(item)
 
 
@@ -388,9 +408,14 @@ def api_titulo(item_id):
 def api_buscar():
     """Busca avançada: filtra o catálogo por título, ano, classificação, nota e qualidade."""
     termo = request.args.get("q", "").strip()
-    ano_min = request.args.get("ano_min", 1980, type=int)
-    ano_max = request.args.get("ano_max", 2026, type=int)
-    nota_min = request.args.get("nota_min", 0, type=float)
+    try:
+        ano_min = int(request.args.get("ano_min", 1980))
+        ano_max = int(request.args.get("ano_max", 2026))
+        nota_min = float(request.args.get("nota_min", 0))
+    except ValueError:
+        return jsonify({"sucesso": False, "mensagem": "Parâmetros ano_min, ano_max e nota_min devem ser numéricos."}), 400
+    if not math.isfinite(nota_min) or not (0 <= nota_min <= 10):
+        return jsonify({"sucesso": False, "mensagem": "O parâmetro nota_min deve estar entre 0 e 10."}), 400
     classificacoes = request.args.getlist("classificacao")
     qualidades = request.args.getlist("qualidade")
 
@@ -398,8 +423,10 @@ def api_buscar():
     return jsonify({"total": len(resultado), "filmes": resultado})
 
 
+# Garante a tabela de usuários também quando o app é iniciado por outro servidor (ex.: gunicorn).
+init_db()
+
 if __name__ == "__main__":
-    init_db()
-    app.run(debug=True)
-    #DOCKER!
-    app.run(host="0.0.0.0", port=5000)
+    # Debug só quando pedido explicitamente (FLASK_DEBUG=1); em debug o Flask exibe tracebacks.
+    # host 0.0.0.0 permite acesso de fora do contêiner Docker.
+    app.run(host="0.0.0.0", port=5000, debug=os.environ.get("FLASK_DEBUG") == "1")

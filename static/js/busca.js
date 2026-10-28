@@ -67,6 +67,11 @@ async function buscar() {
       return;
     }
 
+    if (!resposta.ok) {
+      console.error("Busca recusada pelo servidor:", resposta.status);
+      return;
+    }
+
     const dados = await resposta.json();
     renderizaFilmes(dados.filmes);
     contadorResultados.textContent = `Exibindo ${dados.total} resultados encontrados`;
