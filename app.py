@@ -12,11 +12,13 @@ Rotas principais:
   POST      /api/cadastro  -> cadastro via JS (fetch), retorna JSON
 """
 
+import logging
 import re
 import sqlite3
 from functools import wraps
 
 from flask import Flask, g, jsonify, redirect, render_template, request, session, url_for
+from werkzeug.exceptions import HTTPException
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
@@ -250,6 +252,24 @@ def validar_cadastro(nome, email, senha, confirmar_senha):
     if senha != confirmar_senha:
         return "As senhas não coincidem."
     return None
+
+
+# ---------------------------------------------------------------------------
+# Tratamento de erros
+# ---------------------------------------------------------------------------
+@app.errorhandler(Exception)
+def erro_interno(erro):
+    """Erros inesperados: registra o detalhe no log e devolve mensagem genérica.
+
+    Nunca expõe stack trace, caminho de arquivo ou mensagem do banco ao cliente.
+    Erros HTTP normais (404, 405...) seguem o comportamento padrão do Flask.
+    """
+    if isinstance(erro, HTTPException):
+        return erro
+    app.logger.error("Erro interno em %s %s", request.method, request.path, exc_info=erro)
+    if request.path.startswith("/api/"):
+        return jsonify({"sucesso": False, "mensagem": "Erro interno do servidor. Tente novamente mais tarde."}), 500
+    return "Erro interno do servidor.", 500
 
 
 # ---------------------------------------------------------------------------
