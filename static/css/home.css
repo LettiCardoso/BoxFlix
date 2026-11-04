@@ -8,6 +8,9 @@
   display:block; /* sobrescreve o "display:flex" genérico do style.css para esta página */
 }
 
+/* o atributo hidden precisa vencer regras como ".hero{display:flex}" */
+[hidden]{ display:none !important; }
+
 /* ---------- Topbar ---------- */
 .home-topbar{
   position: sticky;
@@ -135,6 +138,81 @@
   background-position: center;
 }
 
+/* Pôster em baixa resolução esticado em tela cheia fica borrado.
+   Solução: o mesmo pôster vira um fundo desfocado (blur esconde a falta
+   de resolução) e aparece nítido, em tamanho natural, à direita. */
+.hero--com-poster .hero__bg::before{
+  content:"";
+  position:absolute;
+  inset:-60px;
+  background-image: var(--hero-img, none);
+  background-size: cover;
+  background-position: center 25%;
+  filter: blur(28px) saturate(1.15);
+  opacity: .6;
+}
+
+.hero--com-poster .hero__scrim::after{
+  content:"";
+  position:absolute;
+  right: calc(max(0px, (100% - 1280px) / 2) + 32px);
+  bottom: 56px;
+  height: min(460px, calc(100% - 140px));
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  background-image: var(--hero-img, none);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.08);
+}
+
+/* Troca de slide: tudo some rápido, o JS troca o conteúdo e volta */
+.hero__bg,
+.hero__content,
+.hero--com-poster .hero__scrim::after{
+  transition: opacity .35s ease;
+}
+.hero--trocando .hero__bg,
+.hero--trocando .hero__content,
+.hero--trocando.hero--com-poster .hero__scrim::after{
+  opacity: 0;
+}
+
+/* Controles do carrossel (setas + bolinhas), alinhados ao pôster */
+.hero__nav{
+  position:absolute;
+  right: calc(max(0px, (100% - 1280px) / 2) + 32px);
+  bottom: 14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  z-index:2;
+}
+.hero__seta{
+  width:30px; height:30px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.5);
+  color: var(--texto);
+  display:flex; align-items:center; justify-content:center;
+  padding:0;
+  cursor:pointer;
+  transition: border-color .15s ease, color .15s ease;
+}
+.hero__seta:hover{ border-color: var(--vermelho); color: var(--vermelho); }
+.hero__dots{ display:flex; align-items:center; gap:6px; }
+.hero__dot{
+  width:8px; height:8px;
+  border-radius:4px;
+  border:none;
+  padding:0;
+  background: rgba(255,255,255,0.35);
+  cursor:pointer;
+  transition: width .25s ease, background .25s ease;
+}
+.hero__dot:hover{ background: rgba(255,255,255,0.7); }
+.hero__dot--ativo{ width:22px; background: var(--vermelho); }
+
 .hero__scrim{
   position:absolute; inset:0;
   background: linear-gradient(90deg, rgba(11,11,13,0.96) 0%, rgba(11,11,13,0.55) 45%, rgba(11,11,13,0.15) 75%),
@@ -251,8 +329,9 @@
   grid-template-columns: repeat(5, 1fr);
   gap: 18px;
 }
+/* .grid--wide mantido por compatibilidade: séries usam o mesmo tamanho dos filmes */
 .grid--wide{
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
 }
 
 .card{
@@ -260,18 +339,20 @@
   aspect-ratio: 2 / 3;
   border-radius: 6px;
   overflow:hidden;
-  border: 1px dashed rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.08);
   background: linear-gradient(160deg, var(--card) 0%, #1e1e21 100%);
   background-size: cover;
-  background-position: center;
+  background-position: center top;
+  background-repeat: no-repeat;
   cursor: pointer;
-  transition: transform .18s ease, border-color .18s ease;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
-.grid--wide .card{ aspect-ratio: 16 / 9; }
 
-.card:hover{
+.card:hover,
+.card:focus-within{
   transform: translateY(-4px);
   border-color: var(--vermelho);
+  box-shadow: 0 12px 28px rgba(0,0,0,.55);
 }
 
 .card__placeholder{
@@ -301,6 +382,44 @@
 }
 .card:hover .card__label{ opacity:1; }
 
+/* Botão + / ✓ (Minha Lista) no canto do card */
+.card__lista{
+  position:absolute;
+  top:8px; right:8px;
+  width:32px; height:32px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,0.45);
+  background: rgba(0,0,0,0.65);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  cursor:pointer;
+  opacity:0;
+  transition: opacity .18s ease, background .15s ease, border-color .15s ease;
+  z-index:2;
+}
+.card__lista .icon{ width:16px; height:16px; stroke-width:2.5; }
+.card:hover .card__lista,
+.card__lista:focus-visible,
+.card__lista--ativo{ opacity:1; }
+.card__lista:hover{ border-color:#fff; }
+.card__lista--ativo{
+  background: var(--vermelho);
+  border-color: var(--vermelho);
+}
+@media (hover: none){
+  .card__lista{ opacity:1; } /* celular não tem hover */
+}
+
+.row__vazio{
+  color: var(--texto-suave);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 8px 0 0;
+}
+
 /* ---------- Modal de detalhes (filme/série) ---------- */
 .modal{
   display:none;
@@ -319,22 +438,56 @@
   border-radius:10px;
   max-width:720px;
   width:100%;
+  min-height:400px;
   max-height:90vh;
-  overflow:auto;
+  overflow:hidden;
+  display:flex;
+  align-items:flex-end;
 }
 
+/* A imagem do título vira o fundo do modal (mesma ideia do hero):
+   o #modal-poster ocupa a caixa toda; o ::before é o fundo desfocado e
+   escurecido, e o ::after é o pôster nítido à direita. Os dois herdam a
+   imagem que o modal.js coloca no #modal-poster. */
 .modal__poster{
-  width:100%;
-  aspect-ratio:16/9;
-  background-size:cover;
-  background-position:center;
+  position:absolute; inset:0;
+  background-color: transparent;
+  background-size: 0 0;   /* o próprio elemento não desenha a imagem */
+  background-repeat: no-repeat;
+  pointer-events:none;
+}
+.modal__poster::before,
+.modal__poster::after{
+  content:"";
+  position:absolute;
+  background-image: inherit;
+  background-repeat: no-repeat;
+}
+.modal__poster::before{
+  inset:-40px;
+  background-size: cover;
+  background-position: center 25%;
+  filter: blur(26px) brightness(.5) saturate(1.2);
+}
+.modal__poster::after{
+  top:28px; right:28px;
+  height: calc(100% - 56px);
+  aspect-ratio: 2 / 3;
   background-color:#1c1c1f;
-  border-radius:10px 10px 0 0;
+  background-size: cover;
+  background-position: center;
+  border-radius:8px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.08);
 }
 
-.modal__conteudo{ padding:22px 28px 30px; }
-.modal__titulo{ margin:12px 0 8px; font-size:1.6rem; }
-.modal__meta{ color:var(--texto-suave); margin:0 0 16px; font-size:.9rem; }
+.modal__conteudo{
+  position:relative;
+  z-index:1;
+  max-width:58%;
+  padding:56px 28px 34px;
+}
+.modal__titulo{ margin:12px 0 8px; font-size:1.7rem; line-height:1.15; }
+.modal__meta{ color:rgba(255,255,255,.72); margin:0 0 16px; font-size:.9rem; }
 .modal__descricao{ line-height:1.65; color:var(--texto); margin:0; }
 
 .modal__fechar{
@@ -389,9 +542,10 @@
 
 /* ---------- Responsivo ---------- */
 @media (max-width: 1024px){
-  .grid{ grid-template-columns: repeat(3, 1fr); }
-  .grid--wide{ grid-template-columns: repeat(2, 1fr); }
+  .grid,
+  .grid--wide{ grid-template-columns: repeat(3, 1fr); }
   .hero__title{ font-size: 2.4rem; }
+  .hero--com-poster .hero__scrim::after{ height: 340px; }
 }
 
 @media (max-width: 720px){
@@ -399,6 +553,10 @@
   .home-search input{ width: 90px; }
   .hero{ min-height: 520px; }
   .hero__title{ font-size: 1.9rem; }
-  .grid{ grid-template-columns: repeat(2, 1fr); }
-  .grid--wide{ grid-template-columns: repeat(1, 1fr); }
+  .grid,
+  .grid--wide{ grid-template-columns: repeat(2, 1fr); }
+  .hero--com-poster .hero__scrim::after{ display:none; } /* sem espaço no celular */
+  .modal__caixa{ overflow:auto; min-height:0; }
+  .modal__poster::after{ display:none; }
+  .modal__conteudo{ max-width:none; padding-top:120px; }
 }

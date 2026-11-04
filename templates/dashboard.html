@@ -14,10 +14,10 @@
       <a class="logo" href="{{ url_for('dashboard') }}">BoxFlix</a>
 
       <nav class="home-nav">
-        <a href="{{ url_for('dashboard') }}" class="home-nav__link home-nav__link--active">Início</a>
-        <a href="{{ url_for('busca_avancada') }}" class="home-nav__link">Filmes</a>
-        <a href="{{ url_for('busca_avancada') }}" class="home-nav__link">Séries</a>
-        <a href="#" class="home-nav__link">Minha Lista</a>
+        <a href="#inicio" class="home-nav__link home-nav__link--active" data-view="inicio">Início</a>
+        <a href="#filmes" class="home-nav__link" data-view="filmes">Filmes</a>
+        <a href="#series" class="home-nav__link" data-view="series">Séries</a>
+        <a href="#minha-lista" class="home-nav__link" data-view="minha-lista">Minha Lista</a>
       </nav>
 
       <div class="home-topbar__actions">
@@ -60,20 +60,39 @@
             <svg viewBox="0 0 24 24" class="icon icon--sm"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="8"/><line x1="12" y1="12" x2="12" y2="16"/></svg>
             Mais Informações
           </button>
+          <button class="btn btn--ghost" id="hero-lista" type="button"></button>
         </div>
+      </div>
+
+      <!-- controles do carrossel (preenchidos pelo home.js) -->
+      <div class="hero__nav" id="hero-nav" hidden>
+        <button class="hero__seta" id="hero-prev" type="button" aria-label="Anterior">
+          <svg viewBox="0 0 24 24" class="icon icon--sm"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="hero__dots" id="hero-dots"></div>
+        <button class="hero__seta" id="hero-next" type="button" aria-label="Próximo">
+          <svg viewBox="0 0 24 24" class="icon icon--sm"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       </div>
     </section>
 
     <!-- POPULARES AGORA -->
-    <section class="row">
+    <section class="row" id="row-populares">
       <h2 class="row__title">Populares agora</h2>
       <div class="grid" id="grid-populares"></div>
     </section>
 
     <!-- SÉRIES EM ALTA -->
-    <section class="row">
+    <section class="row" id="row-series">
       <h2 class="row__title">Séries em Alta</h2>
-      <div class="grid grid--wide" id="grid-series"></div>
+      <div class="grid" id="grid-series"></div>
+    </section>
+
+    <!-- FILMES / SÉRIES / MINHA LISTA (uma view por vez, escolhida pelo menu) -->
+    <section class="row" id="view-catalogo" hidden>
+      <h2 class="row__title" id="catalogo-titulo"></h2>
+      <div class="grid" id="grid-catalogo"></div>
+      <p class="row__vazio" id="catalogo-vazio" hidden></p>
     </section>
   </main>
 
