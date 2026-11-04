@@ -128,3 +128,5 @@ Configure em *Settings → Secrets and variables → Actions* do repositório:
 | `DOCKERHUB_TOKEN` | token de acesso criado em Docker Hub → Account Settings → Security |
 
 Rodar a imagem publicada: `docker run -p 5000:5000 SEU_USUARIO/boxflix:latest`
+
+Vasco é o menor do rio!
