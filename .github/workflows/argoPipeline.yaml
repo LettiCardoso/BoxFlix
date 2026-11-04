@@ -1,15 +1,54 @@
-name: CD-GitOps
+name: CI - Test, Build and Push to Docker Hub
 
 on:
   push:
-    branches:
-      - develop
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+env:
+  IMAGE_NAME: boxflix
 
 jobs:
-  build:
-    name: Build
+  test:
+    name: Testes automatizados (pytest)
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Rodar testes
+        run: pytest -v
+
+  docker:
+    name: Build e publicação da imagem no Docker Hub
+    runs-on: ubuntu-latest
+    needs: test                       # só publica se os testes passarem
+    if: github.event_name == 'push'   # não publica em pull request
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login no Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build e push da imagem
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
