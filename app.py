@@ -13,6 +13,7 @@ Rotas principais:
 """
 
 import logging
+import os
 import re
 import sqlite3
 from functools import wraps
@@ -22,7 +23,7 @@ from werkzeug.exceptions import HTTPException
 from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "troque-esta-chave-em-producao"  # necessário para usar session
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "troque-esta-chave-em-producao")  # necessário para usar session
 DATABASE = "boxflix.db"
 
 EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -400,6 +401,6 @@ def api_buscar():
 
 if __name__ == "__main__":
     init_db()
-    app.run(debug=True)
-    #DOCKER!
-    app.run(host="0.0.0.0", port=5000)
+    # host 0.0.0.0 é necessário para o container Docker aceitar conexões externas.
+    # debug fica desligado (ligue só em desenvolvimento: FLASK_DEBUG=1).
+    app.run(host="0.0.0.0", port=5000, debug=os.environ.get("FLASK_DEBUG") == "1")

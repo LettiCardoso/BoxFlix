@@ -110,3 +110,21 @@ Os testes (`tests/test_api.py`) implementam todos os cenários descritos abaixo.
 - `/api/buscar` não responde 400 para parâmetros inválidos; ele usa os valores padrão. Se o grupo preferir, é possível alterar a API para validar e retornar 400, e atualizar o cenário BUS-06.
 - `POST /api/cadastro` retorna 200 ao criar o usuário. Se o grupo quiser seguir a convenção REST, basta mudar para 201 e ajustar CAD-01 e o teste.
 - Em produção, o servidor **não** deve rodar com `debug=True`, pois o modo debug exibe *tracebacks* no navegador.
+
+---
+
+## Pipeline de CI (GitHub Actions → Docker Hub)
+
+Arquivo: `.github/workflows/argoPipeline.yaml`. A cada push em `develop`/`main`:
+
+1. **test** – instala dependências e roda `pytest -v`.
+2. **docker** – só se os testes passarem: faz login no Docker Hub, builda a imagem e publica `usuario/boxflix:latest` e `usuario/boxflix:<sha do commit>`.
+
+Configure em *Settings → Secrets and variables → Actions* do repositório:
+
+| Secret | Valor |
+|---|---|
+| `DOCKERHUB_USERNAME` | seu usuário do Docker Hub |
+| `DOCKERHUB_TOKEN` | token de acesso criado em Docker Hub → Account Settings → Security |
+
+Rodar a imagem publicada: `docker run -p 5000:5000 SEU_USUARIO/boxflix:latest`
