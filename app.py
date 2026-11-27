@@ -249,5 +249,7 @@ def api_buscar():
 if __name__ == "__main__":
     init_db()
     # host 0.0.0.0 é necessário para o container Docker aceitar conexões externas.
+    # PORT permite que serviços de nuvem (como Render) definam a porta automaticamente.
     # debug fica desligado (ligue só em desenvolvimento: FLASK_DEBUG=1).
-    app.run(host="0.0.0.0", port=5000, debug=os.environ.get("FLASK_DEBUG") == "1")
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=os.environ.get("FLASK_DEBUG") == "1")
