@@ -129,4 +129,222 @@ Configure em *Settings → Secrets and variables → Actions* do repositório:
 
 Rodar a imagem publicada: `docker run -p 5000:5000 SEU_USUARIO/boxflix:latest`
 
-Vasco é o menor do rio!
+---
+
+## Observabilidade
+
+### O que é observabilidade e por que ela importa
+
+Observabilidade é a capacidade de compreender o **estado interno** de um sistema a partir dos dados que ele expõe — sem precisar adivinhar o que está acontecendo ou acessar o servidor manualmente para investigar.
+
+Enquanto o **monitoramento tradicional** é reativo (alerta quando algo já quebrou), a observabilidade é **proativa**: ela permite antecipar problemas, entender comportamentos inesperados e responder perguntas que nem foram previstas no momento da instrumentação.
+
+Em uma aplicação como a BoxFlix — com autenticação de usuários, catálogo de conteúdo e busca avançada — a observabilidade é essencial para garantir que a experiência dos usuários se mantenha fluida e que falhas sejam identificadas antes de impactarem um grande número de pessoas.
+
+### Os três pilares: métricas, logs e traces
+
+A observabilidade se apoia em três tipos de dados complementares, conhecidos como os **três pilares da observabilidade**:
+
+#### 1. Métricas
+
+Métricas são **valores numéricos agregados ao longo do tempo** que representam o comportamento do sistema em alto nível. Elas respondem à pergunta: *"O sistema está saudável agora?"*
+
+Exemplos de métricas relevantes para a BoxFlix:
+
+| Métrica | Tipo | O que mede | Por que importa |
+|---|---|---|---|
+| `http_requests_total` | Contador | Total de requisições recebidas, por rota e status HTTP | Detectar picos de tráfego ou aumento repentino de erros |
+| `http_request_duration_seconds` | Histograma | Tempo de resposta de cada endpoint | Identificar lentidão em rotas como `/api/buscar` |
+| `login_failures_total` | Contador | Quantidade de tentativas de login que falharam (401) | Detectar possíveis ataques de força bruta |
+| `cadastro_sucesso_total` | Contador | Novos cadastros realizados com sucesso | Acompanhar o crescimento da base de usuários |
+| `db_errors_total` | Contador | Erros ao acessar o banco SQLite | Antecipar problemas de infraestrutura antes de uma queda total |
+
+**Exemplo prático:** se a métrica `http_request_duration_seconds` do endpoint `/api/buscar` começa a subir gradualmente ao longo de semanas, isso pode indicar que o catálogo está crescendo e a busca sequencial está ficando lenta — sinalizando a necessidade de otimização antes que os usuários percebam.
+
+#### 2. Logs
+
+Logs são **registros textuais de eventos** que acontecem durante a execução da aplicação. Eles respondem à pergunta: *"O que aconteceu em determinado momento?"*
+
+A BoxFlix já possui um logging básico no error handler (linha 270 do `app.py`):
+
+```python
+app.logger.error("Erro interno em %s %s", request.method, request.path, exc_info=erro)
+```
+
+Para uma observabilidade mais completa, os logs seriam expandidos com diferentes níveis de severidade:
+
+| Nível | Quando usar | Exemplo na BoxFlix |
+|---|---|---|
+| `DEBUG` | Detalhes úteis em desenvolvimento | `"Busca avançada: q='homem', ano_min=2010 → 2 resultados em 3ms"` |
+| `INFO` | Eventos normais relevantes | `"Usuário id=42 (maria@email.com) logou com sucesso"` |
+| `WARNING` | Situações suspeitas que merecem atenção | `"3 tentativas de login falhas para naoexiste@email.com em 1 minuto"` |
+| `ERROR` | Falhas que impactam uma requisição | `"Erro 500 em POST /api/cadastro: sqlite3.OperationalError"` |
+| `CRITICAL` | Falhas que comprometem todo o sistema | `"Banco de dados inacessível após 5 tentativas de reconexão"` |
+
+**Logs estruturados (JSON)** facilitam a análise automatizada. Em vez de texto livre, cada entrada teria campos padronizados:
+
+```json
+{
+  "timestamp": "2026-11-28T14:30:00Z",
+  "level": "WARNING",
+  "event": "login_falho",
+  "email": "atacante@email.com",
+  "ip": "192.168.1.100",
+  "motivo": "senha_incorreta",
+  "tentativas_recentes": 5,
+  "rota": "POST /api/login"
+}
+```
+
+Isso permitiria, por exemplo, buscar todos os logins falhos de um mesmo IP nas últimas 24 horas — algo difícil com logs em texto simples.
+
+#### 3. Traces (rastreamento distribuído)
+
+Traces acompanham o **caminho completo de uma requisição** através de todos os componentes do sistema, dividindo-a em **spans** (etapas). Eles respondem à pergunta: *"Onde exatamente a requisição ficou lenta ou falhou?"*
+
+Exemplo de trace para uma busca na BoxFlix:
+
+```
+Trace ID: abc-123-def
+│
+├─ Span 1: Flask recebe GET /api/buscar?q=homem         [2ms]
+│   ├─ Atributos: método=GET, rota=/api/buscar, usuario_id=42
+│
+├─ Span 2: Validar e extrair parâmetros da query string  [1ms]
+│   ├─ Atributos: q="homem", ano_min=1980, ano_max=2026
+│
+├─ Span 3: filtra_catalogo() — percorrer e filtrar itens  [4ms]
+│   ├─ Atributos: itens_avaliados=9, resultados=2
+│
+├─ Span 4: Serializar resposta JSON                       [1ms]
+│
+└─ Total: 8ms | Status: OK
+```
+
+Se a BoxFlix evoluísse para uma arquitetura com microsserviços (por exemplo, um serviço de autenticação separado do serviço de catálogo), os traces seriam ainda mais valiosos para rastrear uma requisição que atravessa múltiplos serviços.
+
+### Telemetria: identificação e antecipação de falhas
+
+**Telemetria** é o processo de coletar, transmitir e analisar automaticamente os dados de observabilidade (métricas, logs e traces). Na BoxFlix, a telemetria contribuiria para:
+
+**Identificação rápida de falhas:**
+- Se a taxa de respostas 500 no `/api/login` subir de 0% para 10% em 5 minutos, um alerta automático notificaria a equipe imediatamente, sem esperar que os usuários reclamem.
+- Cruzando logs e traces, seria possível descobrir que o erro ocorre especificamente quando o banco de dados atinge um limite de conexões simultâneas.
+
+**Antecipação de problemas:**
+- Se o tempo médio de resposta do `/api/buscar` cresce 50ms por semana, a telemetria permite projetar que em 2 meses a experiência ficará inaceitável — dando tempo para otimizar a busca.
+- Se o número de tentativas de login falhas para um mesmo IP excede um limiar, o sistema pode bloquear o IP automaticamente antes que um ataque de força bruta tenha sucesso.
+
+**Melhoria contínua:**
+- Dados de telemetria alimentam decisões de evolução do software: quais funcionalidades são mais usadas (priorizar melhorias), quais rotas são mais lentas (priorizar otimizações), quais erros são mais frequentes (priorizar correções).
+- Comparar métricas antes e depois de um deploy permite avaliar objetivamente se uma mudança melhorou ou piorou a aplicação.
+
+### Ferramentas de telemetria e monitoramento
+
+#### Prometheus
+
+**O que é:** banco de dados de séries temporais que coleta e armazena métricas, usando um modelo de *pull* (ele consulta a aplicação periodicamente em um endpoint `/metrics`).
+
+**Como seria usado na BoxFlix:**
+- A biblioteca `prometheus_flask_instrumentator` exporia automaticamente métricas HTTP (contagem de requisições, tempo de resposta, tamanho da resposta) no endpoint `/metrics`.
+- Métricas de negócio personalizadas (logins falhos, cadastros) seriam registradas manualmente com contadores do Prometheus.
+- Regras de alerta seriam configuradas: por exemplo, `rate(http_requests_total{status="500"}[5m]) > 0.05` dispara um alerta se mais de 5% das requisições resultam em erro 500.
+
+```python
+# Exemplo conceitual de instrumentação com Prometheus
+from prometheus_flask_instrumentator import Instrumentator
+from prometheus_client import Counter
+
+login_falhos = Counter('login_failures_total', 'Tentativas de login que falharam')
+
+Instrumentator().instrument(app).expose(app)  # expõe /metrics automaticamente
+
+# No endpoint de login, ao falhar:
+login_falhos.inc()
+```
+
+#### Grafana
+
+**O que é:** plataforma de visualização que cria dashboards interativos a partir de diversas fontes de dados (Prometheus, Elasticsearch, etc.).
+
+**Como seria usado na BoxFlix:**
+- **Dashboard de saúde geral:** gráficos de requisições por segundo, taxa de erros, tempo de resposta (p50, p95, p99).
+- **Dashboard de autenticação:** logins bem-sucedidos vs. falhos por hora, novos cadastros por dia, IPs com mais tentativas falhas.
+- **Dashboard de busca:** termos mais buscados, tempo de resposta da busca, proporção de buscas sem resultado.
+- Alertas visuais: painéis que mudam de verde para vermelho quando uma métrica ultrapassa o limiar definido.
+
+#### Elastic Stack (ELK)
+
+**O que é:** conjunto de três ferramentas — **Elasticsearch** (indexação e busca), **Logstash** (coleta e processamento de logs) e **Kibana** (visualização) — para centralizar e analisar logs.
+
+**Como seria usado na BoxFlix:**
+- **Logstash** coletaria os logs JSON estruturados da aplicação Flask e os enviaria ao Elasticsearch.
+- **Elasticsearch** indexaria os logs, permitindo buscas como: "todos os erros 500 das últimas 24h na rota /api/cadastro" ou "todos os warnings de login falho do IP 192.168.1.100".
+- **Kibana** exibiria dashboards de logs: volume de logs por nível (INFO, WARNING, ERROR), linha do tempo de erros, e filtros por rota, usuário ou IP.
+
+Essa centralização seria especialmente útil se a BoxFlix rodasse em múltiplos containers Docker — sem o ELK, seria necessário acessar cada container individualmente para ver os logs.
+
+#### OpenTelemetry
+
+**O que é:** framework open-source e vendor-neutral que padroniza a coleta dos três pilares (métricas, logs e traces) em uma única API, permitindo enviar dados para qualquer backend (Prometheus, Jaeger, Elastic, Grafana Cloud, etc.).
+
+**Como seria usado na BoxFlix:**
+- A biblioteca `opentelemetry-instrumentation-flask` geraria automaticamente spans para cada requisição HTTP, sem alterar o código da aplicação.
+- Spans personalizados poderiam ser adicionados para funções internas como `filtra_catalogo()` e `validar_cadastro()`.
+- Os dados seriam exportados via OTLP (OpenTelemetry Protocol) para um coletor central, que redistribuiria para Prometheus (métricas), Jaeger (traces) e Elasticsearch (logs).
+
+```python
+# Exemplo conceitual de instrumentação com OpenTelemetry
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
+from opentelemetry import trace
+
+FlaskInstrumentor().instrument_app(app)
+tracer = trace.get_tracer("boxflix")
+
+# Dentro de uma função, criar um span personalizado:
+def filtra_catalogo(termo, ano_min, ano_max, classificacoes, nota_min, qualidades):
+    with tracer.start_as_current_span("filtra_catalogo") as span:
+        span.set_attribute("busca.termo", termo)
+        span.set_attribute("busca.ano_min", ano_min)
+        # ... lógica de filtro ...
+        span.set_attribute("busca.resultados", len(resultado))
+        return resultado
+```
+
+### Arquitetura de observabilidade proposta para a BoxFlix
+
+O diagrama abaixo ilustra como as ferramentas de observabilidade se integrariam à arquitetura da BoxFlix:
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                        BoxFlix (Flask)                           │
+│                                                                  │
+│  ┌────────────┐   ┌────────────┐   ┌────────────────────────┐   │
+│  │  Métricas  │   │    Logs    │   │        Traces          │   │
+│  │ Prometheus │   │  JSON p/   │   │   OpenTelemetry SDK    │   │
+│  │  Client    │   │  stdout    │   │   (Flask Instrumentor) │   │
+│  └─────┬──────┘   └─────┬──────┘   └───────────┬────────────┘   │
+│        │                │                       │                │
+└────────┼────────────────┼───────────────────────┼────────────────┘
+         │                │                       │
+         ▼                ▼                       ▼
+   ┌───────────┐   ┌───────────┐          ┌─────────────┐
+   │Prometheus │   │ Logstash  │          │ OTel        │
+   │  Server   │   │           │          │ Collector   │
+   └─────┬─────┘   └─────┬─────┘         └──────┬──────┘
+         │                │                      │
+         ▼                ▼                      ▼
+   ┌───────────┐   ┌──────────────┐       ┌───────────┐
+   │  Grafana  │   │Elasticsearch │       │  Jaeger   │
+   │(dashboards│   │   + Kibana   │       │ (traces)  │
+   │ e alertas)│   │   (logs)     │       │           │
+   └───────────┘   └──────────────┘       └───────────┘
+```
+
+**Fluxo:**
+1. A aplicação Flask, instrumentada com OpenTelemetry e Prometheus Client, gera métricas, logs estruturados e traces durante cada requisição.
+2. O Prometheus Server coleta as métricas periodicamente consultando o endpoint `/metrics`.
+3. Os logs são coletados pelo Logstash e enviados ao Elasticsearch para indexação.
+4. Os traces são enviados via OTLP para o OpenTelemetry Collector, que os encaminha ao Jaeger.
+5. O Grafana conecta-se ao Prometheus para exibir dashboards de métricas e configurar alertas.
+6. O Kibana conecta-se ao Elasticsearch para visualização e busca de logs.

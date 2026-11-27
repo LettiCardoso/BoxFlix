@@ -16,9 +16,9 @@
 
       <nav class="home-nav">
         <a href="{{ url_for('dashboard') }}" class="home-nav__link">Início</a>
-        <a href="{{ url_for('busca_avancada') }}" class="home-nav__link home-nav__link--active">Filmes</a>
-        <a href="{{ url_for('busca_avancada') }}" class="home-nav__link">Séries</a>
-        <a href="#" class="home-nav__link">Minha Lista</a>
+        <a href="{{ url_for('dashboard') }}#filmes" class="home-nav__link">Filmes</a>
+        <a href="{{ url_for('dashboard') }}#series" class="home-nav__link">Séries</a>
+        <a href="{{ url_for('dashboard') }}#minha-lista" class="home-nav__link">Minha Lista</a>
       </nav>
 
       <div class="home-topbar__actions">
@@ -105,32 +105,9 @@
     </div>
   </main>
 
-  <footer class="home-footer">
-    <div class="home-footer__inner">
-      <a class="logo" href="{{ url_for('dashboard') }}">BoxFlix</a>
-      <nav class="home-footer__links">
-        <a href="#">Termos de Uso</a>
-        <a href="#">Privacidade</a>
-        <a href="#">Ajuda</a>
-        <a href="#">Contato</a>
-      </nav>
-      <p class="home-footer__copy">&copy; 2026 BoxFlix. Projeto acadêmico — todos os direitos reservados.</p>
-    </div>
-  </footer>
+  {% include "partials/footer.html" %}
 
-  <!-- Modal de detalhes (filme/série) -->
-  <div class="modal" id="modal-detalhe">
-    <div class="modal__caixa">
-      <button class="modal__fechar" id="modal-fechar" aria-label="Fechar">&times;</button>
-      <div class="modal__poster" id="modal-poster"></div>
-      <div class="modal__conteudo">
-        <span class="badge" id="modal-tipo">FILME</span>
-        <h2 class="modal__titulo" id="modal-titulo"></h2>
-        <p class="modal__meta" id="modal-meta"></p>
-        <p class="modal__descricao" id="modal-descricao"></p>
-      </div>
-    </div>
-  </div>
+  {% include "partials/modal.html" %}
 
   <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
   <script src="{{ url_for('static', filename='js/busca.js') }}"></script>

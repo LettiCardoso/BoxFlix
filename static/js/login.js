@@ -7,23 +7,6 @@ const campoSenha = document.getElementById("senha");
 const btnEntrar = document.getElementById("btn-entrar");
 const caixaAlerta = document.getElementById("alerta");
 
-const REGEX_EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-
-function mostrarAlerta(mensagem, tipo) {
-  caixaAlerta.textContent = mensagem;
-  caixaAlerta.className = `alerta mostrar ${tipo}`;
-}
-
-function limparAlerta() {
-  caixaAlerta.className = "alerta";
-  caixaAlerta.textContent = "";
-}
-
-function definirErroCampo(input, idErro, mensagem) {
-  document.getElementById(idErro).textContent = mensagem;
-  input.classList.toggle("campo-invalido", Boolean(mensagem));
-}
-
 function validarFormulario() {
   let valido = true;
 
@@ -46,7 +29,7 @@ function validarFormulario() {
 
 form.addEventListener("submit", async (evento) => {
   evento.preventDefault();
-  limparAlerta();
+  limparAlerta(caixaAlerta);
 
   if (!validarFormulario()) {
     return;
@@ -68,21 +51,18 @@ form.addEventListener("submit", async (evento) => {
     const dados = await resposta.json();
 
     if (!resposta.ok || !dados.sucesso) {
-      mostrarAlerta(dados.mensagem || "Não foi possível entrar.", "erro");
+      mostrarAlerta(caixaAlerta, dados.mensagem || "Não foi possível entrar.", "erro");
       return;
     }
 
-    mostrarAlerta(dados.mensagem, "sucesso");
+    mostrarAlerta(caixaAlerta, dados.mensagem, "sucesso");
     window.location.href = dados.redirect || "/dashboard";
   } catch (erro) {
-    mostrarAlerta("Erro de conexão com o servidor. Tente novamente.", "erro");
+    mostrarAlerta(caixaAlerta, "Erro de conexão com o servidor. Tente novamente.", "erro");
   } finally {
     btnEntrar.disabled = false;
     btnEntrar.textContent = "Entrar";
   }
 });
 
-// Remove a mensagem de erro assim que o usuário volta a digitar
-[campoEmail, campoSenha].forEach((campo) => {
-  campo.addEventListener("input", () => campo.classList.remove("campo-invalido"));
-});
+registrarLimpezaDeErro([campoEmail, campoSenha]);
