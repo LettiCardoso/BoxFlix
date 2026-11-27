@@ -1,4 +1,4 @@
-name: CI - Test, Build and Push to Docker Hub
+name: CI/CD - Test, Build, Push and Deploy
 
 on:
   push:
@@ -53,3 +53,19 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+  deploy:
+    name: Deploy contínuo (CD) no Render
+    runs-on: ubuntu-latest
+    needs: docker                     # só faz deploy se os testes e o push Docker passarem
+    if: github.event_name == 'push'
+    steps:
+      - name: Disparar deploy no Render
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then
+            echo "Secret RENDER_DEPLOY_HOOK não configurado."
+            exit 1
+          fi
+          curl -fsSL -X POST "$RENDER_DEPLOY_HOOK"
