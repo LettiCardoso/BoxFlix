@@ -195,18 +195,3 @@ body {
   font-size: 0.8rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
-
-/* Dashboard simples */
-.dashboard {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  text-align: center;
-}
-
-.dashboard h1 {
-  color: var(--vermelho);
-}
